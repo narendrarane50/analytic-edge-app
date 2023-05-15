@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 
 function CommentsTable() {
   const [comments, setComments] = useState([]);
@@ -8,99 +7,80 @@ function CommentsTable() {
   const [filterValue, setFilterValue] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-
-//   useEffect(() => {
-//     fetchComments1();
-//   }, [searchKeyword, filterAttribute, filterValue]);
-
-//   const fetchComments1 = () => {
-//     let url = "https://jsonplaceholder.typicode.com/comments";
-
-//     if (searchKeyword) {
-//       url += `?q=${searchKeyword}`;
-//     } else if (filterAttribute && filterValue) {
-//       url += `?${filterAttribute}=${filterValue}`;
-//     }
-
-//     fetch(url)
-//       .then((response) => response.json())
-//       .then((commentsData) => {
-//         setComments(commentsData);
-//       })
-//       .catch((error) => console.error("Error:", error));
-//   };
-
-//   useEffect(() => {
-//     fetchComments();
-//   }, [currentPage]);
-
-//   const fetchComments = () => {
-//     const start = (currentPage - 1) * 10; // Assuming 10 comments per page
-//     const limit = 10;
-
-//     fetch(
-//       `https://jsonplaceholder.typicode.com/comments?_start=${start}&_limit=${limit}`
-//     )
-//       .then((response) => response.json())
-//       .then((commentsData) => {
-//         setComments(commentsData);
-//       })
-//       .catch((error) => console.error("Error:", error));
-//   };
-
-
+  const [sortColumn, setSortColumn] = useState("");
+  const [sortDirection, setSortDirection] = useState("asc");
 
   useEffect(() => {
-      fetchComments();
-    }, [searchKeyword, filterAttribute, filterValue, currentPage]);
+    fetchComments();
+  }, [
+    searchKeyword,
+    filterAttribute,
+    filterValue,
+    currentPage,
+    sortColumn,
+    sortDirection,
+  ]);
 
-    const fetchComments = () => {
-      let url = 'https://jsonplaceholder.typicode.com/comments';
+  const fetchComments = () => {
+    let url = "https://jsonplaceholder.typicode.com/comments";
 
-      const limit = 10; // Display 10 users per page
+    const limit = 10; // Display 10 users per page
 
-      // Calculate the starting index based on the current page and limit
-      const startIndex = (currentPage - 1) * limit;
+    // Calculate the starting index based on the current page and limit
+    const startIndex = (currentPage - 1) * limit;
 
-      // Add pagination parameters to the URL
-      url += `?_start=${startIndex}&_limit=${limit}`;
+    // Add pagination parameters to the URL
+    url += `?_start=${startIndex}&_limit=${limit}`;
 
-      if (searchKeyword) {
-        url += `&q=${searchKeyword}`;
-      } else if (filterAttribute && filterValue) {
-        url += `&${filterAttribute}=${filterValue}`;
-      }
+    if (searchKeyword) {
+      url += `&q=${searchKeyword}`;
+    } else if (filterAttribute && filterValue) {
+      url += `&${filterAttribute}=${filterValue}`;
+    }
 
-      fetch(url)
-        .then(response => response.json())
-        .then(commentsData => {
-          // Calculate the total number of pages
-          const totalPages = Math.ceil(commentsData.length / limit);
+    if (sortColumn) {
+      url += `&_sort=${sortColumn}&_order=${sortDirection}`;
+    }
 
-          setComments(commentsData);
-          setTotalPages(totalPages);
-        })
-        .catch(error => console.error('Error:', error));
-    };
+    fetch(url)
+      .then((response) => response.json())
+      .then((commentsData) => {
+        // Calculate the total number of pages
+        const totalPages = Math.ceil(commentsData.length / limit);
 
-    useEffect(() => {
-        fetchTotalPages1();
-      });
-    
-      const fetchTotalPages1 = () => {
-        fetch(`https://jsonplaceholder.typicode.com/comments`)
-          .then((response) => response.json())
-          .then((commentsData) => {
-            const totalComments = commentsData.length;
-            const pages = Math.ceil(totalComments / 10); // Assuming 10 comments per page
-            setTotalPages(pages);
-          })
-          .catch((error) => console.error("Error:", error));
-      };
+        setComments(commentsData);
+        setTotalPages(totalPages);
+      })
+      .catch((error) => console.error("Error:", error));
+  };
 
-  //   const handlePageChange = (page) => {
-  //     setCurrentPage(page);
-  //   };
+  const handleSort = (column) => {
+    if (column === sortColumn) {
+      // If the same column is clicked, toggle the sort direction
+      setSortDirection((prevDirection) =>
+        prevDirection === "asc" ? "desc" : "asc"
+      );
+    } else {
+      // If a different column is clicked, set it as the new sort column with ascending direction
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  useEffect(() => {
+    fetchTotalPages1();
+  });
+
+  const fetchTotalPages1 = () => {
+    fetch(`https://jsonplaceholder.typicode.com/comments`)
+      .then((response) => response.json())
+      .then((commentsData) => {
+        const totalComments = commentsData.length;
+        const pages = Math.ceil(totalComments / 10); // Assuming 10 comments per page
+        setTotalPages(pages);
+      })
+      .catch((error) => console.error("Error:", error));
+  };
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
@@ -146,18 +126,48 @@ function CommentsTable() {
         className="border border-gray-300 rounded px-4 py-2 mb-4"
       />
 
+      {/* Table */}
       <table className="w-full border border-gray-800">
-        {/* Table headers */}
         <thead>
           <tr>
-            <th className="border border-gray-800 px-4 py-2">ID</th>
-            <th className="border border-gray-800 px-4 py-2">Name</th>
-            <th className="border border-gray-800 px-4 py-2">Email</th>
-            <th className="border border-gray-800 px-4 py-2">Body</th>
+            <th
+              className="border border-gray-800 px-4 py-2 cursor-pointer"
+              onClick={() => handleSort("id")}
+            >
+              ID{" "}
+              {sortColumn === "id" && (
+                <span>{sortDirection === "asc" ? "▲" : "▼"}</span>
+              )}
+            </th>
+            <th
+              className="border border-gray-800 px-4 py-2 cursor-pointer"
+              onClick={() => handleSort("name")}
+            >
+              Name{" "}
+              {sortColumn === "name" && (
+                <span>{sortDirection === "asc" ? "▲" : "▼"}</span>
+              )}
+            </th>
+            <th
+              className="border border-gray-800 px-4 py-2 cursor-pointer"
+              onClick={() => handleSort("email")}
+            >
+              Email{" "}
+              {sortColumn === "email" && (
+                <span>{sortDirection === "asc" ? "▲" : "▼"}</span>
+              )}
+            </th>
+            <th
+              className="border border-gray-800 px-4 py-2 cursor-pointer"
+              onClick={() => handleSort("body")}
+            >
+              Body{" "}
+              {sortColumn === "body" && (
+                <span>{sortDirection === "asc" ? "▲" : "▼"}</span>
+              )}
+            </th>
           </tr>
         </thead>
-
-        {/* Table body */}
         <tbody>
           {comments.map((comment) => (
             <tr key={comment.id}>
