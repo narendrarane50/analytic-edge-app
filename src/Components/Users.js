@@ -1,14 +1,17 @@
-// import React, { useEffect, useState } from 'react';
-// import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 
-// function UsersTable() {
-//   const [users, setUsers] = useState([]);
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const [totalPages, setTotalPages] = useState(0);
 
-//   useEffect(() => {
-//     fetchUsers();
-//   }, [currentPage]);
+function UsersTable() {
+  const [users, setUsers] = useState([]);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [filterAttribute, setFilterAttribute] = useState('');
+  const [filterValue, setFilterValue] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [searchKeyword, filterAttribute, filterValue, currentPage]);
 
 //   const fetchUsers = () => {
 //     const start = (currentPage - 1) * 10; // Assuming 10 users per page
@@ -22,84 +25,35 @@
 //       .catch(error => console.error('Error:', error));
 //   };
 
-//   useEffect(() => {
-//     const pages = Math.ceil(users.length / 10); // Assuming 10 users per page
-//     setTotalPages(pages);
-//   }, [users]);
+const fetchUsers = () => {
+    let url = 'https://jsonplaceholder.typicode.com/users';
 
-//   const handlePageChange = (page) => {
-//     setCurrentPage(page);
-//   };
-
-//   return (
-//     <div>
-//       <h1 className="text-xl font-bold mb-4">Users</h1>
-//       <table className="w-full border border-gray-800">
-//         <thead>
-//           <tr>
-//             <th className="border border-gray-800 px-4 py-2">ID</th>
-//             <th className="border border-gray-800 px-4 py-2">Name</th>
-//             <th className="border border-gray-800 px-4 py-2">Email</th>
-//             <th className="border border-gray-800 px-4 py-2">Username</th>
-//           </tr>
-//         </thead>
-//         <tbody>
-//           {users.map(user => (
-//             <tr key={user.id}>
-//               <td className="border border-gray-800 px-4 py-2">{user.id}</td>
-//               <td className="border border-gray-800 px-4 py-2">{user.name}</td>
-//               <td className="border border-gray-800 px-4 py-2">{user.email}</td>
-//               <td className="border border-gray-800 px-4 py-2">{user.username}</td>
-//             </tr>
-//           ))}
-//         </tbody>
-//       </table>
-
-//       {/* Pagination */}
-//       <div className="mt-4 flex justify-center">
-//         {Array.from({ length: totalPages }, (_, index) => index + 1).map(page => (
-//           <button
-//             key={page}
-//             onClick={() => handlePageChange(page)}
-//             className={`px-3 py-2 mx-1 bg-blue-500 text-white rounded ${currentPage === page ? 'bg-blue-700' : ''}`}
-//           >
-//             {page}
-//           </button>
-//         ))}
-//       </div>
-
-//       <Link to="/posts" className="text-blue-500 hover:text-blue-700 block mt-4">
-//         Go to Posts
-//       </Link>
-//     </div>
-//   );
-// }
-
-// export default UsersTable;
-
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-
-function UsersTable() {
-  const [users, setUsers] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [currentPage]);
-
-  const fetchUsers = () => {
-    const start = (currentPage - 1) * 10; // Assuming 10 users per page
-    const limit = 10;
-
-    fetch(`https://jsonplaceholder.typicode.com/users?_start=${start}&_limit=${limit}`)
+    const limit = 10; // Display 10 users per page
+  
+    // Calculate the starting index based on the current page and limit
+    const startIndex = (currentPage - 1) * limit;
+  
+    // Add pagination parameters to the URL
+    url += `?_start=${startIndex}&_limit=${limit}`;
+  
+    if (searchKeyword) {
+      url += `&q=${searchKeyword}`;
+    } else if (filterAttribute && filterValue) {
+      url += `&${filterAttribute}=${filterValue}`;
+    }
+  
+    fetch(url)
       .then(response => response.json())
       .then(usersData => {
+        // Calculate the total number of pages
+        const totalPages = Math.ceil(usersData.length / limit);
+  
         setUsers(usersData);
+        setTotalPages(totalPages);
       })
       .catch(error => console.error('Error:', error));
   };
+  
 
   useEffect(() => {
     fetchTotalPages();
@@ -135,6 +89,36 @@ function UsersTable() {
   return (
     <div>
       <h1 className="text-xl font-bold mb-4">Users</h1>
+
+      {/* Global Search */}
+    <input
+      type="text"
+      value={searchKeyword}
+      onChange={(e) => setSearchKeyword(e.target.value)}
+      placeholder="Search..."
+      className="border border-gray-300 rounded px-4 py-2 mb-4"
+    />
+
+    {/* Filter by Attribute and Value */}
+    <select
+      value={filterAttribute}
+      onChange={(e) => setFilterAttribute(e.target.value)}
+      className="border border-gray-300 rounded px-4 py-2 mb-4"
+    >
+      <option value="">Select Attribute</option>
+      <option value="name">Name</option>
+      <option value="username">Username</option>
+      <option value="email">Email</option>
+    </select>
+    <input
+      type="text"
+      value={filterValue}
+      onChange={(e) => setFilterValue(e.target.value)}
+      placeholder="Enter Filter Value..."
+      className="border border-gray-300 rounded px-4 py-2 mb-4"
+    />
+
+
       <table className="w-full border border-gray-800">
         {/* Table headers */}
         <thead>
@@ -179,13 +163,6 @@ function UsersTable() {
           Next
         </button>
       </div>
-  
-      <Link to="/posts" className="text-blue-500 hover:text-blue-700 block mt-4">
-        Go to Posts
-      </Link>
-      <Link to="/comments" className="text-blue-500 hover:text-blue-700 block mt-2">
-        Go to Comments
-      </Link>
     </div>
   );
 }

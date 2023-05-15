@@ -5,19 +5,51 @@ function PostsTable() {
   const [posts, setPosts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [filterAttribute, setFilterAttribute] = useState('');
+  const [filterValue, setFilterValue] = useState('');
+  const limit = 10; // Display 10 users per page
 
-  useEffect(() => {
+//   useEffect(() => {
+//     fetchPosts();
+//   }, [currentPage]);
+
+//   const fetchPosts = () => {
+//     const start = (currentPage - 1) * 10; // Assuming 10 posts per page
+//     const limit = 10;
+
+//     fetch(`https://jsonplaceholder.typicode.com/posts?_start=${start}&_limit=${limit}`)
+//       .then(response => response.json())
+//       .then(postsData => {
+//         setPosts(postsData);
+//       })
+//       .catch(error => console.error('Error:', error));
+//   };
+
+useEffect(() => {
     fetchPosts();
-  }, [currentPage]);
+  }, [searchKeyword, filterAttribute, filterValue, currentPage]);
 
   const fetchPosts = () => {
-    const start = (currentPage - 1) * 10; // Assuming 10 posts per page
-    const limit = 10;
+    let url = 'https://jsonplaceholder.typicode.com/posts';
 
-    fetch(`https://jsonplaceholder.typicode.com/posts?_start=${start}&_limit=${limit}`)
+    // Calculate the starting index based on the current page and limit
+    const startIndex = (currentPage - 1) * limit;
+
+    // Add pagination parameters to the URL
+    url += `?_start=${startIndex}&_limit=${limit}`;
+
+    if (searchKeyword) {
+      url += `&q=${searchKeyword}`;
+    } else if (filterAttribute && filterValue) {
+      url += `&${filterAttribute}=${filterValue}`;
+    }
+
+    fetch(url)
       .then(response => response.json())
       .then(postsData => {
         setPosts(postsData);
+
       })
       .catch(error => console.error('Error:', error));
   };
@@ -56,6 +88,34 @@ function PostsTable() {
   return (
     <div>
       <h1 className="text-xl font-bold mb-4">Posts</h1>
+
+      {/* Search Input */}
+      <input
+        type="text"
+        value={searchKeyword}
+        onChange={(e) => setSearchKeyword(e.target.value)}
+        placeholder="Search..."
+        className="border border-gray-300 rounded px-4 py-2 mb-4"
+      />
+
+      {/* Filter Input */}
+      <select
+        value={filterAttribute}
+        onChange={(e) => setFilterAttribute(e.target.value)}
+        className="border border-gray-300 rounded px-4 py-2 mb-4"
+      >
+        <option value="">Select Attribute</option>
+        <option value="id">User ID</option>
+        <option value="title">Title</option>
+      </select>
+      <input
+        type="text"
+        value={filterValue}
+        onChange={(e) => setFilterValue(e.target.value)}
+        placeholder="Enter Filter Value..."
+        className="border border-gray-300 rounded px-4 py-2 mb-4"
+      />
+
       <table className="w-full border border-gray-800">
         {/* Table headers */}
         <thead>
@@ -99,12 +159,7 @@ function PostsTable() {
         </button>
       </div>
   
-      <Link to="/users" className="text-blue-500 hover:text-blue-700 block mt-4">
-        Go to Users
-      </Link>
-      <Link to="/comments" className="text-blue-500 hover:text-blue-700 block mt-2">
-        Go to Comments
-      </Link>
+      
     </div>
   );
 }
